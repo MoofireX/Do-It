@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do-It! Task Manager</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background: linear-gradient(120deg, #84fab0, #8fd3f4);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .container h1 {
+            margin-bottom: 20px;
+        }
+        .task-input {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .task-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .task-input button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #84fab0;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .task-input button:hover {
+            background: #62e0a2;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+        .task-item {
+            background: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .task-item button {
+            border: none;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .task-item button:hover {
+            background: #ff5252;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Do-It! Task Manager</h1>
+        <div class="task-input">
+            <input type="text" id="taskInput" placeholder="Enter a new task...">
+            <button onclick="addTask()">Add</button>
+        </div>
+        <ul class="task-list" id="taskList"></ul>
+    </div>
+
+    <script>
+        // Fetch tasks from the Python backend
+        async function fetchTasks() {
+            const response = await fetch('/tasks'); // Adjust to match your server endpoint
+            const tasks = await response.json();
+            renderTasks(tasks);
+        }
+
+        // Render tasks in the list
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const taskItem = document.createElement('li');
+                taskItem.className = 'task-item';
+                taskItem.innerHTML = `
+                    <span>${task}</span>
+                    <button onclick="removeTask(${index})">Done</button>
+                `;
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        // Add a task
+        async function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const newTask = taskInput.value.trim();
+            if (newTask) {
+                await fetch('/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ task: newTask }),
+                });
+                taskInput.value = '';
+                fetchTasks();
+            }
+        }
+
+        // Remove a task
+        async function removeTask(index) {
+            await fetch(`/remove/${index}`, { method: 'DELETE' });
+            fetchTasks();
+        }
+
+        // Initialize
+        fetchTasks();
+    </script>
+</body>
+</html>
